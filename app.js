@@ -1,11 +1,11 @@
 /* ==========================
-   HSTU Enrollment (Frontend Demo)
-   - Regular: auto term courses + fixed term credits slip (PDF totals)
-   - Repeat/Improve: starts empty, user adds courses
-   - Payment UI (SIMULATION):
+   HSTU Semester Enrollment Portal (Frontend)
+   - Regular: auto term courses + fixed term credits (per curriculum totals)
+   - Repeat/Improve: starts empty, student adds courses
+   - Payment UI:
        Card + Mobile Banking (bKash/Nagad/Rocket)
-       Mobile number input => auto OTP generate
-       PIN + OTP => Payment Successfully + animation
+       Mobile number input => OTP auto generated (onscreen)
+       PIN + OTP => Payment Successful + animation
    ========================== */
 
 const LS_USERS = "hstu_users";
@@ -38,7 +38,7 @@ function loadPayments(){ return JSON.parse(localStorage.getItem(LS_PAYMENTS) || 
 function savePayments(obj){ localStorage.setItem(LS_PAYMENTS, JSON.stringify(obj)); }
 
 /* ==========================
-   DATA (from syllabus PDF)
+   DATA (from curriculum PDF)
    ========================== */
 const DATA = {
   perCreditDefault: 120,
@@ -141,52 +141,32 @@ const DATA = {
   ],
   options: {
     OPT1: [
-      { theory:{code:"CSE 409", title:"Advanced Database Management System", credit:3.00},
-        lab:{code:"CSE 410", title:"Advanced DBMS Sessional", credit:0.75} },
-      { theory:{code:"CSE 411", title:"Advanced Algorithm Design", credit:3.00},
-        lab:{code:"CSE 412", title:"Advanced Algorithm Design Sessional", credit:0.75} },
-      { theory:{code:"CSE 413", title:"Management Information System", credit:3.00},
-        lab:{code:"CSE 414", title:"MIS Sessional", credit:0.75} },
-      { theory:{code:"CSE 415", title:"Mobile and Wireless Communication", credit:3.00},
-        lab:{code:"CSE 416", title:"Mobile & Wireless Communication Sessional", credit:0.75} },
-      { theory:{code:"CSE 417", title:"Communication Engineering", credit:3.00},
-        lab:{code:"CSE 418", title:"Communication Engineering Sessional", credit:0.75} },
+      { theory:{code:"CSE 409", title:"Advanced Database Management System", credit:3.00}, lab:{code:"CSE 410", title:"Advanced DBMS Sessional", credit:0.75} },
+      { theory:{code:"CSE 411", title:"Advanced Algorithm Design", credit:3.00}, lab:{code:"CSE 412", title:"Advanced Algorithm Design Sessional", credit:0.75} },
+      { theory:{code:"CSE 413", title:"Management Information System", credit:3.00}, lab:{code:"CSE 414", title:"MIS Sessional", credit:0.75} },
+      { theory:{code:"CSE 415", title:"Mobile and Wireless Communication", credit:3.00}, lab:{code:"CSE 416", title:"Mobile & Wireless Communication Sessional", credit:0.75} },
+      { theory:{code:"CSE 417", title:"Communication Engineering", credit:3.00}, lab:{code:"CSE 418", title:"Communication Engineering Sessional", credit:0.75} },
     ],
     OPT2: [
-      { theory:{code:"CSE 419", title:"System Analysis and Design", credit:3.00},
-        lab:{code:"CSE 420", title:"System Analysis & Design Sessional", credit:0.75} },
-      { theory:{code:"CSE 421", title:"Software Testing and Quality Assurance", credit:3.00},
-        lab:{code:"CSE 422", title:"STQA Sessional", credit:0.75} },
-      { theory:{code:"CSE 423", title:"Graph Theory", credit:3.00},
-        lab:{code:"CSE 424", title:"Graph Theory Sessional", credit:0.75} },
-      { theory:{code:"CSE 425", title:"Cryptography and Network Security", credit:3.00},
-        lab:{code:"CSE 426", title:"Crypto & Network Security Sessional", credit:0.75} },
-      { theory:{code:"CSE 427", title:"Simulation and Modelling", credit:3.00},
-        lab:{code:"CSE 428", title:"Simulation & Modelling Sessional", credit:0.75} },
+      { theory:{code:"CSE 419", title:"System Analysis and Design", credit:3.00}, lab:{code:"CSE 420", title:"System Analysis & Design Sessional", credit:0.75} },
+      { theory:{code:"CSE 421", title:"Software Testing and Quality Assurance", credit:3.00}, lab:{code:"CSE 422", title:"STQA Sessional", credit:0.75} },
+      { theory:{code:"CSE 423", title:"Graph Theory", credit:3.00}, lab:{code:"CSE 424", title:"Graph Theory Sessional", credit:0.75} },
+      { theory:{code:"CSE 425", title:"Cryptography and Network Security", credit:3.00}, lab:{code:"CSE 426", title:"Crypto & Network Security Sessional", credit:0.75} },
+      { theory:{code:"CSE 427", title:"Simulation and Modelling", credit:3.00}, lab:{code:"CSE 428", title:"Simulation & Modelling Sessional", credit:0.75} },
     ],
     OPT3: [
-      { theory:{code:"CSE 459", title:"Data Mining and Warehousing", credit:3.00},
-        lab:{code:"CSE 460", title:"Data Mining & Warehousing Sessional", credit:0.75} },
-      { theory:{code:"CSE 461", title:"Cloud Computing", credit:3.00},
-        lab:{code:"CSE 462", title:"Cloud Computing Sessional", credit:0.75} },
-      { theory:{code:"CSE 463", title:"VLSI Design", credit:3.00},
-        lab:{code:"CSE 464", title:"VLSI Design Sessional", credit:0.75} },
-      { theory:{code:"CSE 465", title:"Digital System Design", credit:3.00},
-        lab:{code:"CSE 466", title:"Digital System Design Sessional", credit:0.75} },
-      { theory:{code:"CSE 467", title:"Parallel and Distributed System", credit:3.00},
-        lab:{code:"CSE 468", title:"Parallel & Distributed System Sessional", credit:0.75} },
+      { theory:{code:"CSE 459", title:"Data Mining and Warehousing", credit:3.00}, lab:{code:"CSE 460", title:"Data Mining & Warehousing Sessional", credit:0.75} },
+      { theory:{code:"CSE 461", title:"Cloud Computing", credit:3.00}, lab:{code:"CSE 462", title:"Cloud Computing Sessional", credit:0.75} },
+      { theory:{code:"CSE 463", title:"VLSI Design", credit:3.00}, lab:{code:"CSE 464", title:"VLSI Design Sessional", credit:0.75} },
+      { theory:{code:"CSE 465", title:"Digital System Design", credit:3.00}, lab:{code:"CSE 466", title:"Digital System Design Sessional", credit:0.75} },
+      { theory:{code:"CSE 467", title:"Parallel and Distributed System", credit:3.00}, lab:{code:"CSE 468", title:"Parallel & Distributed System Sessional", credit:0.75} },
     ],
     OPT4: [
-      { theory:{code:"CSE 469", title:"Machine Learning and Pattern Recognition", credit:3.00},
-        lab:{code:"CSE 470", title:"ML & Pattern Recognition Sessional", credit:0.75} },
-      { theory:{code:"CSE 471", title:"Natural Language Processing", credit:3.00},
-        lab:{code:"CSE 472", title:"NLP Sessional", credit:0.75} },
-      { theory:{code:"CSE 473", title:"Human and Computer Interaction", credit:3.00},
-        lab:{code:"CSE 474", title:"HCI Sessional", credit:0.75} },
-      { theory:{code:"CSE 475", title:"Robotics", credit:3.00},
-        lab:{code:"CSE 476", title:"Robotics Sessional", credit:0.75} },
-      { theory:{code:"CSE 477", title:"Bioinformatics", credit:3.00},
-        lab:{code:"CSE 478", title:"Bioinformatics Sessional", credit:0.75} },
+      { theory:{code:"CSE 469", title:"Machine Learning and Pattern Recognition", credit:3.00}, lab:{code:"CSE 470", title:"ML & Pattern Recognition Sessional", credit:0.75} },
+      { theory:{code:"CSE 471", title:"Natural Language Processing", credit:3.00}, lab:{code:"CSE 472", title:"NLP Sessional", credit:0.75} },
+      { theory:{code:"CSE 473", title:"Human and Computer Interaction", credit:3.00}, lab:{code:"CSE 474", title:"HCI Sessional", credit:0.75} },
+      { theory:{code:"CSE 475", title:"Robotics", credit:3.00}, lab:{code:"CSE 476", title:"Robotics Sessional", credit:0.75} },
+      { theory:{code:"CSE 477", title:"Bioinformatics", credit:3.00}, lab:{code:"CSE 478", title:"Bioinformatics Sessional", credit:0.75} },
     ]
   }
 };
@@ -199,30 +179,15 @@ let STATE = null;
 let PAY = { tab:"card", mbBrand:"bKash", otp:null, otpFor:null };
 
 /* ==========================
-   Core UI
+   Helpers
    ========================== */
-function ensureSeedData() {
-  const users = loadUsers();
-  if (users.length) return;
-  saveUsers([{ userId:"student", password:"1234", name:"Demo Student", dept:"CSE" }]);
-}
-function renderTermOptions() {
-  const sel = $("termSelect");
-  sel.innerHTML = "";
-  DATA.terms.forEach(t => {
-    const opt = document.createElement("option");
-    opt.value = t.key;
-    opt.textContent = t.label;
-    sel.appendChild(opt);
-  });
-}
-function isL4(termKey) { return termKey === "L4S1" || termKey === "L4S2"; }
-function getDefaultEnrollState() {
+function isL4(termKey){ return termKey === "L4S1" || termKey === "L4S2"; }
+function getDefaultEnrollState(){
   return { enrollType:"REGULAR", termKey:"L1S1", perCreditFee:DATA.perCreditDefault, optAIndex:0, optBIndex:0, selectedCourseCodes:[] };
 }
 function getUserById(userId){ return loadUsers().find(u => u.userId === userId); }
 
-function computeTermCourses(termKey, optAIndex, optBIndex) {
+function computeTermCourses(termKey, optAIndex, optBIndex){
   const term = DATA.terms.find(t => t.key === termKey);
   if (!term) return [];
   let base = term.courses.map(c => ({...c}));
@@ -252,17 +217,19 @@ function computeTermCourses(termKey, optAIndex, optBIndex) {
   return base;
 }
 
-function computeCreditsSelected(state, termCourses) {
+function computeCreditsSelected(state, termCourses){
   if (state.enrollType === "REGULAR") return Number(DATA.termTotals[state.termKey] || 0);
   const set = new Set(state.selectedCourseCodes || []);
-  return termCourses.reduce((s,c)=> s + (set.has(c.code)? Number(c.credit||0):0), 0);
+  return termCourses.reduce((s,c)=> s + (set.has(c.code) ? Number(c.credit||0) : 0), 0);
 }
-function computeFee(state, credits) {
+function computeFee(state, credits){
   return Number(state.perCreditFee||0) * Number(credits||0);
 }
 
-/* ===== Rendering ===== */
-function courseCard(course, actionLabel, onAction, disabled=false) {
+/* ==========================
+   UI rendering
+   ========================== */
+function courseCard(course, actionLabel, onAction, disabled=false){
   const div = document.createElement("div");
   div.className = "item";
   div.innerHTML = `
@@ -283,7 +250,18 @@ function courseCard(course, actionLabel, onAction, disabled=false) {
   return div;
 }
 
-function fillElectiveDropdown(selectId, optionArr, selectedIndex) {
+function renderTermOptions(){
+  const sel = $("termSelect");
+  sel.innerHTML = "";
+  DATA.terms.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t.key;
+    opt.textContent = t.label;
+    sel.appendChild(opt);
+  });
+}
+
+function fillElectiveDropdown(selectId, optionArr, selectedIndex){
   const sel = $(selectId);
   sel.innerHTML = "";
   optionArr.forEach((pair, idx) => {
@@ -295,7 +273,7 @@ function fillElectiveDropdown(selectId, optionArr, selectedIndex) {
   });
 }
 
-function renderElectiveSelectors(state) {
+function renderElectiveSelectors(state){
   const box = $("electivesBox");
   if (!isL4(state.termKey)) { box.classList.add("hidden"); return; }
   box.classList.remove("hidden");
@@ -313,7 +291,7 @@ function renderElectiveSelectors(state) {
   }
 }
 
-function renderLists(state) {
+function renderLists(state){
   const termCourses = computeTermCourses(state.termKey, state.optAIndex, state.optBIndex);
 
   if (state.enrollType === "REGULAR") state.selectedCourseCodes = termCourses.map(c => c.code);
@@ -354,12 +332,12 @@ function renderLists(state) {
   $("modeText").textContent = state.enrollType;
 
   $("btnClear").disabled = (state.enrollType === "REGULAR");
-  $("btnClear").textContent = (state.enrollType === "REGULAR") ? "Locked (Regular)" : "Clear";
+  $("btnClear").textContent = (state.enrollType === "REGULAR") ? "Locked" : "Clear";
 
   $("btnPayNow").disabled = (state.enrollType === "REPEAT" && credits <= 0);
 }
 
-function renderPreviewSlip(state) {
+function renderPreviewSlip(state){
   const termCourses = computeTermCourses(state.termKey, state.optAIndex, state.optBIndex);
   const selectedSet = new Set(state.selectedCourseCodes || []);
   const per = Number(state.perCreditFee || 0);
@@ -377,7 +355,7 @@ function renderPreviewSlip(state) {
   $("slip").innerHTML = `
     <div class="slip-title">
       <div>
-        <div style="font-weight:1000;font-size:16px">Enrollment Slip (Preview)</div>
+        <div style="font-weight:1000;font-size:16px">Enrollment Slip</div>
         <div class="muted" style="font-size:12px">${DATA.terms.find(t=>t.key===state.termKey)?.label || state.termKey} • ${state.enrollType}</div>
       </div>
       <div class="muted" style="font-size:12px;text-align:right">
@@ -390,9 +368,7 @@ function renderPreviewSlip(state) {
       <tbody>
         ${
           rows.length
-          ? rows.map(c=>`
-            <tr><td><b>${c.code}</b></td><td>${c.title}</td><td class="right">${to2(c.credit)}</td></tr>
-          `).join("")
+          ? rows.map(c=>`<tr><td><b>${c.code}</b></td><td>${c.title}</td><td class="right">${to2(c.credit)}</td></tr>`).join("")
           : `<tr><td colspan="3" class="muted">No course selected.</td></tr>`
         }
       </tbody>
@@ -405,19 +381,8 @@ function renderPreviewSlip(state) {
 }
 
 /* ==========================
-   Payment (SIMULATION)
+   Payment UI
    ========================== */
-function openPayModal(){
-  updatePaySummary();
-  $("payModal").classList.remove("hidden");
-  $("payStatus").classList.add("hidden");
-  $("successOverlay").classList.add("hidden");
-}
-
-function closePayModal(){
-  $("payModal").classList.add("hidden");
-}
-
 function updatePaySummary(){
   const termCourses = computeTermCourses(STATE.termKey, STATE.optAIndex, STATE.optBIndex);
   const credits = computeCreditsSelected(STATE, termCourses);
@@ -435,11 +400,21 @@ function updatePaySummary(){
   $("payTotalText").textContent = moneyBDT(totalPayable);
 }
 
+function openPayModal(){
+  updatePaySummary();
+  $("payModal").classList.remove("hidden");
+  $("payStatus").classList.add("hidden");
+  $("successOverlay").classList.add("hidden");
+}
+
+function closePayModal(){
+  $("payModal").classList.add("hidden");
+}
+
 function setPayTab(tabName){
   PAY.tab = tabName;
   document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
   document.querySelector(`.tab[data-tab="${tabName}"]`)?.classList.add("active");
-
   $("tab-card").classList.toggle("hidden", tabName !== "card");
   $("tab-mbank").classList.toggle("hidden", tabName !== "mbank");
   updatePaySummary();
@@ -460,31 +435,52 @@ function showPayStatus(msg){
 function validatePayment(){
   const termCourses = computeTermCourses(STATE.termKey, STATE.optAIndex, STATE.optBIndex);
   const credits = computeCreditsSelected(STATE, termCourses);
-  if (credits <= 0) return { ok:false, msg:"No credits selected." };
+  if (credits <= 0) return { ok:false, msg:"Please select at least one course." };
 
   if (PAY.tab === "card") {
     const cn = $("cardNumber").value.trim();
     const ex = $("cardExp").value.trim();
     const cv = $("cardCvv").value.trim();
     const nm = $("cardName").value.trim();
-    if (!cn || cn.replace(/\s/g,"").length < 12) return { ok:false, msg:"Card number invalid." };
-    if (!ex || ex.length < 4) return { ok:false, msg:"Expiry invalid." };
-    if (!cv || cv.length < 3) return { ok:false, msg:"CVV invalid." };
-    if (!nm) return { ok:false, msg:"Name on card required." };
+    if (!cn || cn.replace(/\s/g,"").length < 12) return { ok:false, msg:"Please enter a valid card number." };
+    if (!ex || ex.length < 4) return { ok:false, msg:"Please enter a valid expiry date." };
+    if (!cv || cv.length < 3) return { ok:false, msg:"Please enter a valid CVV." };
+    if (!nm) return { ok:false, msg:"Please enter the name on the card." };
     return { ok:true, method:"CARD" };
   }
 
-  // mobile banking
   const mb = $("mbNumber").value.trim();
   const otp = $("mbOtp").value.trim();
   const pin = $("mbPin").value.trim();
 
-  if (!mb || mb.length !== 11) return { ok:false, msg:"Mobile number must be 11 digits." };
-  if (!PAY.otp || PAY.otpFor !== mb) return { ok:false, msg:"OTP not generated. Enter mobile number again." };
-  if (otp !== PAY.otp) return { ok:false, msg:"OTP mismatch." };
-  if (!pin || pin.length < 4) return { ok:false, msg:"PIN invalid." };
+  if (!mb || mb.length !== 11) return { ok:false, msg:"Please enter a valid 11-digit mobile number." };
+  if (!PAY.otp || PAY.otpFor !== mb) return { ok:false, msg:"OTP is not available. Please re-enter the mobile number." };
+  if (otp !== PAY.otp) return { ok:false, msg:"Invalid OTP. Please check and try again." };
+  if (!pin || pin.length < 4) return { ok:false, msg:"Invalid PIN. Please try again." };
 
   return { ok:true, method: PAY.mbBrand };
+}
+
+/* ===== Success animation ===== */
+function makeConfetti(){
+  const box = $("confetti");
+  box.innerHTML = "";
+  const n = 26;
+  for (let i=0;i<n;i++){
+    const p = document.createElement("i");
+    p.style.left = Math.floor(Math.random()*100) + "%";
+    p.style.animationDelay = (Math.random()*0.25) + "s";
+    const hue = Math.floor(Math.random()*360);
+    p.style.background = `hsl(${hue} 90% 60%)`;
+    p.style.width = (8 + Math.random()*6) + "px";
+    p.style.height = (10 + Math.random()*10) + "px";
+    box.appendChild(p);
+  }
+}
+function showSuccessOverlay(payment){
+  $("successMeta").textContent = `${payment.method} • ${moneyBDT(payment.totalPaid)} • ${payment.paymentId}`;
+  makeConfetti();
+  $("successOverlay").classList.remove("hidden");
 }
 
 function renderFinalSlip(p){
@@ -492,7 +488,7 @@ function renderFinalSlip(p){
   $("finalSlip").innerHTML = `
     <div class="slip-title">
       <div>
-        <div style="font-weight:1000;font-size:16px">FINAL PAYMENT SLIP</div>
+        <div style="font-weight:1000;font-size:16px">Payment Slip</div>
         <div class="muted" style="font-size:12px">${p.termLabel} • ${p.enrollType} • Method: <b>${p.method}</b></div>
       </div>
       <div class="muted" style="font-size:12px;text-align:right">
@@ -505,9 +501,7 @@ function renderFinalSlip(p){
       <tbody>
         ${
           p.courses?.length
-          ? p.courses.map(c=>`
-            <tr><td><b>${c.code}</b></td><td>${c.title}</td><td class="right">${to2(c.credit)}</td></tr>
-          `).join("")
+          ? p.courses.map(c=>`<tr><td><b>${c.code}</b></td><td>${c.title}</td><td class="right">${to2(c.credit)}</td></tr>`).join("")
           : `<tr><td colspan="3" class="muted">No courses</td></tr>`
         }
       </tbody>
@@ -519,7 +513,7 @@ function renderFinalSlip(p){
       </tfoot>
     </table>
     <div class="muted" style="margin-top:10px;font-size:12px">
-      Student: <b>${p.name}</b> (${p.userId}) • Dept: ${p.dept}
+      Student: <b>${p.name}</b> (${p.userId}) • Department: ${p.dept}
     </div>
   `;
 }
@@ -557,40 +551,15 @@ function finalizePayment(method){
   const payments = loadPayments();
   payments[CURRENT_USER.userId] = payment;
   savePayments(payments);
+
   renderFinalSlip(payment);
-
   return payment;
-}
-
-/* ===== Success Animation ===== */
-function makeConfetti(){
-  const box = $("confetti");
-  box.innerHTML = "";
-  const n = 26;
-  for (let i=0;i<n;i++){
-    const p = document.createElement("i");
-    p.style.left = Math.floor(Math.random()*100) + "%";
-    p.style.animationDelay = (Math.random()*0.25) + "s";
-    p.style.transform = `translateY(0) rotate(${Math.random()*180}deg)`;
-    // random color (no hard-coded palette needed, but we can mix)
-    const hue = Math.floor(Math.random()*360);
-    p.style.background = `hsl(${hue} 90% 60%)`;
-    p.style.width = (8 + Math.random()*6) + "px";
-    p.style.height = (10 + Math.random()*10) + "px";
-    box.appendChild(p);
-  }
-}
-
-function showSuccessOverlay(payment){
-  $("successMeta").textContent = `${payment.method} • ${moneyBDT(payment.totalPaid)} • ${payment.paymentId}`;
-  makeConfetti();
-  $("successOverlay").classList.remove("hidden");
 }
 
 /* ==========================
    State sync
    ========================== */
-function syncAndRender(state) {
+function syncAndRender(state){
   state.optAIndex = Number(state.optAIndex || 0);
   state.optBIndex = Number(state.optBIndex || 0);
   state.perCreditFee = Number(state.perCreditFee || 0);
@@ -612,7 +581,7 @@ function syncAndRender(state) {
 }
 
 /* ==========================
-   App
+   App lifecycle
    ========================== */
 function showApp(user){
   CURRENT_USER = user;
@@ -620,7 +589,6 @@ function showApp(user){
   $("authCard").classList.add("hidden");
   $("app").classList.remove("hidden");
   $("btnLogout").classList.remove("hidden");
-  
 
   renderTermOptions();
   STATE = loadEnrollState() || getDefaultEnrollState();
@@ -628,9 +596,7 @@ function showApp(user){
   $("enrollType").value = STATE.enrollType;
   $("termSelect").value = STATE.termKey;
   $("perCreditFee").value = STATE.perCreditFee;
-   $("welcomeText").textContent = `Welcome, ${user.name} (${user.userId}) • Dept: ${user.dept}`;
 
-  // last payment
   const payments = loadPayments();
   if (payments[user.userId]) renderFinalSlip(payments[user.userId]);
 
@@ -658,21 +624,21 @@ function showApp(user){
 }
 
 /* ==========================
-   Auth
+   Authentication
    ========================== */
 function login(userId, password){
   const u = loadUsers().find(x => x.userId===userId && x.password===password);
-  if (!u) return alert("Login failed. Check User ID / Password.");
+  if (!u) return alert("Sign in failed. Please check your Student ID and Password.");
   setSession(u.userId);
   showApp(u);
 }
 function registerUser(userId, password, name, dept){
-  if (!userId || !password) return alert("User ID & Password required.");
+  if (!userId || !password) return alert("Student ID and Password are required.");
   const users = loadUsers();
-  if (users.some(u => u.userId===userId)) return alert("User already exists.");
+  if (users.some(u => u.userId===userId)) return alert("This Student ID already exists.");
   users.push({ userId, password, name: name||"Student", dept: dept||"CSE" });
   saveUsers(users);
-  alert("Account created! Now login.");
+  alert("Account created successfully. You can sign in now.");
 }
 function resetAll(){
   localStorage.removeItem(LS_USERS);
@@ -682,22 +648,23 @@ function resetAll(){
   ensureSeedData();
   location.reload();
 }
+function ensureSeedData(){
+  const users = loadUsers();
+  if (users.length) return;
+  // Default record for local testing
+  saveUsers([{ userId:"student", password:"1234", name:"Student", dept:"CSE" }]);
+}
 
 /* ==========================
    Payment modal bindings
    ========================== */
 function bindPaymentEvents(){
-  $("btnClosePay").onclick = () => closePayModal();
+  $("btnClosePay").onclick = closePayModal;
 
-  document.querySelectorAll(".tab").forEach(btn => {
-    btn.onclick = () => setPayTab(btn.dataset.tab);
-  });
+  document.querySelectorAll(".tab").forEach(btn => btn.onclick = () => setPayTab(btn.dataset.tab));
+  document.querySelectorAll(".brandBtn").forEach(btn => btn.onclick = () => setMBBrand(btn.dataset.brand));
 
-  document.querySelectorAll(".brandBtn").forEach(btn => {
-    btn.onclick = () => setMBBrand(btn.dataset.brand);
-  });
-
-  // card formatting
+  // Card formatting
   $("cardNumber").addEventListener("input", (e) => {
     let v = e.target.value.replace(/\D/g,"").slice(0,16);
     v = v.replace(/(\d{4})(?=\d)/g, "$1 ");
@@ -709,7 +676,7 @@ function bindPaymentEvents(){
     e.target.value = v;
   });
 
-  // ✅ OTP auto-generate when mobile number is valid (11 digits)
+  // OTP auto-generate after valid 11-digit number
   $("mbNumber").addEventListener("input", (e) => {
     const v = e.target.value.replace(/\D/g,"").slice(0,11);
     e.target.value = v;
@@ -717,45 +684,43 @@ function bindPaymentEvents(){
     if (v.length === 11) {
       PAY.otp = genOTP();
       PAY.otpFor = v;
-      $("mbOtp").value = PAY.otp; // auto fill (demo)
-      $("otpHint").textContent = `OTP generated ✅ (Demo OTP: ${PAY.otp})`;
-      $("otpHint").classList.remove("muted");
+      $("mbOtp").value = PAY.otp; // displayed for portal verification flow
+      $("otpHint").textContent = `OTP generated. (OTP: ${PAY.otp})`;
     } else {
       PAY.otp = null;
       PAY.otpFor = null;
       $("mbOtp").value = "";
-      $("otpHint").textContent = `Enter mobile number to get OTP`;
-      $("otpHint").classList.add("muted");
+      $("otpHint").textContent = "Enter your mobile number to receive an OTP.";
     }
   });
 
-  // pay card
   $("btnPayCard").onclick = () => {
     PAY.tab = "card";
     updatePaySummary();
+
     const v = validatePayment();
     if (!v.ok) return showPayStatus(v.msg);
 
-    showPayStatus("Processing card payment…");
+    showPayStatus("Processing payment...");
     setTimeout(() => {
       const payment = finalizePayment("CARD");
       showSuccessOverlay(payment);
-      setTimeout(() => { closePayModal(); }, 1400);
+      setTimeout(() => closePayModal(), 1400);
     }, 900);
   };
 
-  // pay mobile
   $("btnPayMB").onclick = () => {
     PAY.tab = "mbank";
     updatePaySummary();
+
     const v = validatePayment();
     if (!v.ok) return showPayStatus(v.msg);
 
-    showPayStatus(`Processing ${PAY.mbBrand} payment…`);
+    showPayStatus("Processing payment...");
     setTimeout(() => {
       const payment = finalizePayment(PAY.mbBrand);
       showSuccessOverlay(payment);
-      setTimeout(() => { closePayModal(); }, 1400);
+      setTimeout(() => closePayModal(), 1400);
     }, 900);
   };
 }
@@ -776,14 +741,17 @@ function bindPaymentEvents(){
     $("regDept").value.trim()
   );
 
+  // Create local user record for testing
   $("btnCreateDemo").onclick = () => {
-    const demoId = "2002010";
+    const id = $("loginUser").value.trim() || "2002010";
     const users = loadUsers();
-    if (!users.some(u => u.userId === demoId)) {
-      users.push({ userId: demoId, password:"1234", name:"Amit (Demo)", dept:"CSE" });
+    if (!users.some(u => u.userId === id)) {
+      users.push({ userId:id, password:"1234", name:"Student", dept:"CSE" });
       saveUsers(users);
+      alert("Student account created successfully. Default password: 1234");
+    } else {
+      alert("Student account already exists.");
     }
-    alert("Demo student created: 2002010 / 1234");
   };
 
   $("btnLogout").onclick = () => {
@@ -801,5 +769,3 @@ function bindPaymentEvents(){
     if (u) showApp(u);
   }
 })();
-
-
