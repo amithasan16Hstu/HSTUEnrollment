@@ -1,15 +1,17 @@
 /* ==========================
    HSTU Enrollment (Frontend Demo)
-   - Regular: auto term courses + fixed term credits slip (PDF term totals)
-   - Repeat/Improve: starts empty, user adds courses, slip by selected credits
-   - Payment gateway UI (SIMULATION): Card + Mobile Banking (bKash/Nagad/Rocket)
-   - Final payment slip saved in localStorage
+   - Regular: auto term courses + fixed term credits slip (PDF totals)
+   - Repeat/Improve: starts empty, user adds courses
+   - Payment UI (SIMULATION):
+       Card + Mobile Banking (bKash/Nagad/Rocket)
+       Mobile number input => auto OTP generate
+       PIN + OTP => Payment Successfully + animation
    ========================== */
 
 const LS_USERS = "hstu_users";
 const LS_SESSION = "hstu_session";
 const LS_ENROLL = "hstu_enroll_state";
-const LS_PAYMENTS = "hstu_payments"; // store last payment per user
+const LS_PAYMENTS = "hstu_payments";
 
 const $ = (id) => document.getElementById(id);
 
@@ -21,52 +23,29 @@ function to2(n){ return (Math.round((Number(n)||0)*100)/100).toFixed(2); }
 function uid(prefix="TXN"){
   return `${prefix}-${Date.now()}-${Math.floor(Math.random()*9000+1000)}`;
 }
+function genOTP(){
+  return String(Math.floor(100000 + Math.random()*900000));
+}
 
-function loadUsers() {
-  return JSON.parse(localStorage.getItem(LS_USERS) || "[]");
-}
-function saveUsers(users) {
-  localStorage.setItem(LS_USERS, JSON.stringify(users));
-}
-function setSession(userId) {
-  localStorage.setItem(LS_SESSION, JSON.stringify({ userId }));
-}
-function getSession() {
-  return JSON.parse(localStorage.getItem(LS_SESSION) || "null");
-}
-function clearSession() {
-  localStorage.removeItem(LS_SESSION);
-}
-function loadEnrollState() {
-  return JSON.parse(localStorage.getItem(LS_ENROLL) || "null");
-}
-function saveEnrollState(state) {
-  localStorage.setItem(LS_ENROLL, JSON.stringify(state));
-}
-function loadPayments(){
-  return JSON.parse(localStorage.getItem(LS_PAYMENTS) || "{}");
-}
-function savePayments(obj){
-  localStorage.setItem(LS_PAYMENTS, JSON.stringify(obj));
-}
+function loadUsers(){ return JSON.parse(localStorage.getItem(LS_USERS) || "[]"); }
+function saveUsers(users){ localStorage.setItem(LS_USERS, JSON.stringify(users)); }
+function setSession(userId){ localStorage.setItem(LS_SESSION, JSON.stringify({ userId })); }
+function getSession(){ return JSON.parse(localStorage.getItem(LS_SESSION) || "null"); }
+function clearSession(){ localStorage.removeItem(LS_SESSION); }
+function loadEnrollState(){ return JSON.parse(localStorage.getItem(LS_ENROLL) || "null"); }
+function saveEnrollState(state){ localStorage.setItem(LS_ENROLL, JSON.stringify(state)); }
+function loadPayments(){ return JSON.parse(localStorage.getItem(LS_PAYMENTS) || "{}"); }
+function savePayments(obj){ localStorage.setItem(LS_PAYMENTS, JSON.stringify(obj)); }
 
 /* ==========================
    DATA (from syllabus PDF)
    ========================== */
 const DATA = {
   perCreditDefault: 120,
-
   termTotals: {
-    "L1S1": 19.00,
-    "L1S2": 19.25,
-    "L2S1": 21.50,
-    "L2S2": 20.00,
-    "L3S1": 18.50,
-    "L3S2": 18.50,
-    "L4S1": 18.75,
-    "L4S2": 19.25
+    "L1S1": 19.00, "L1S2": 19.25, "L2S1": 21.50, "L2S2": 20.00,
+    "L3S1": 18.50, "L3S2": 18.50, "L4S1": 18.75, "L4S2": 19.25
   },
-
   terms: [
     { key:"L1S1", label:"Level 1 - Semester I", courses:[
       {code:"CSE 101", title:"Fundamentals of Computer and Computing", credit:2.00},
@@ -160,7 +139,6 @@ const DATA = {
       {code:"OPT4_LAB", title:"Option IV Sessional (Selected)", credit:0.75, group:"OPT4"},
     ]},
   ],
-
   options: {
     OPT1: [
       { theory:{code:"CSE 409", title:"Advanced Database Management System", credit:3.00},
@@ -214,21 +192,19 @@ const DATA = {
 };
 
 /* ==========================
-   Global runtime
+   Runtime
    ========================== */
 let CURRENT_USER = null;
 let STATE = null;
-let PAY = { tab:"card", mbBrand:"bKash" };
+let PAY = { tab:"card", mbBrand:"bKash", otp:null, otpFor:null };
 
 /* ==========================
-   Core helpers
+   Core UI
    ========================== */
 function ensureSeedData() {
-  let users = loadUsers();
-  if (!users.length) {
-    users = [{ userId:"student", password:"1234", name:"Demo Student", dept:"CSE" }];
-    saveUsers(users);
-  }
+  const users = loadUsers();
+  if (users.length) return;
+  saveUsers([{ userId:"student", password:"1234", name:"Demo Student", dept:"CSE" }]);
 }
 function renderTermOptions() {
   const sel = $("termSelect");
@@ -240,48 +216,36 @@ function renderTermOptions() {
     sel.appendChild(opt);
   });
 }
-function isL4(termKey) {
-  return termKey === "L4S1" || termKey === "L4S2";
-}
+function isL4(termKey) { return termKey === "L4S1" || termKey === "L4S2"; }
 function getDefaultEnrollState() {
-  return {
-    enrollType: "REGULAR",
-    termKey: "L1S1",
-    perCreditFee: DATA.perCreditDefault,
-    optAIndex: 0,
-    optBIndex: 0,
-    selectedCourseCodes: []
-  };
+  return { enrollType:"REGULAR", termKey:"L1S1", perCreditFee:DATA.perCreditDefault, optAIndex:0, optBIndex:0, selectedCourseCodes:[] };
 }
-function getUserById(userId) {
-  return loadUsers().find(u => u.userId === userId);
-}
+function getUserById(userId){ return loadUsers().find(u => u.userId === userId); }
 
 function computeTermCourses(termKey, optAIndex, optBIndex) {
   const term = DATA.terms.find(t => t.key === termKey);
   if (!term) return [];
   let base = term.courses.map(c => ({...c}));
-
   if (!isL4(termKey)) return base;
 
   if (termKey === "L4S1") {
-    const pick1 = DATA.options.OPT1[optAIndex] || DATA.options.OPT1[0];
-    const pick2 = DATA.options.OPT2[optBIndex] || DATA.options.OPT2[0];
+    const p1 = DATA.options.OPT1[optAIndex] || DATA.options.OPT1[0];
+    const p2 = DATA.options.OPT2[optBIndex] || DATA.options.OPT2[0];
     base = base.map(c => {
-      if (c.code === "OPT1_THEORY") return {...pick1.theory, group:"OPT1"};
-      if (c.code === "OPT1_LAB") return {...pick1.lab, group:"OPT1"};
-      if (c.code === "OPT2_THEORY") return {...pick2.theory, group:"OPT2"};
-      if (c.code === "OPT2_LAB") return {...pick2.lab, group:"OPT2"};
+      if (c.code === "OPT1_THEORY") return {...p1.theory, group:"OPT1"};
+      if (c.code === "OPT1_LAB") return {...p1.lab, group:"OPT1"};
+      if (c.code === "OPT2_THEORY") return {...p2.theory, group:"OPT2"};
+      if (c.code === "OPT2_LAB") return {...p2.lab, group:"OPT2"};
       return c;
     });
   } else {
-    const pick3 = DATA.options.OPT3[optAIndex] || DATA.options.OPT3[0];
-    const pick4 = DATA.options.OPT4[optBIndex] || DATA.options.OPT4[0];
+    const p3 = DATA.options.OPT3[optAIndex] || DATA.options.OPT3[0];
+    const p4 = DATA.options.OPT4[optBIndex] || DATA.options.OPT4[0];
     base = base.map(c => {
-      if (c.code === "OPT3_THEORY") return {...pick3.theory, group:"OPT3"};
-      if (c.code === "OPT3_LAB") return {...pick3.lab, group:"OPT3"};
-      if (c.code === "OPT4_THEORY") return {...pick4.theory, group:"OPT4"};
-      if (c.code === "OPT4_LAB") return {...pick4.lab, group:"OPT4"};
+      if (c.code === "OPT3_THEORY") return {...p3.theory, group:"OPT3"};
+      if (c.code === "OPT3_LAB") return {...p3.lab, group:"OPT3"};
+      if (c.code === "OPT4_THEORY") return {...p4.theory, group:"OPT4"};
+      if (c.code === "OPT4_LAB") return {...p4.lab, group:"OPT4"};
       return c;
     });
   }
@@ -290,21 +254,14 @@ function computeTermCourses(termKey, optAIndex, optBIndex) {
 
 function computeCreditsSelected(state, termCourses) {
   if (state.enrollType === "REGULAR") return Number(DATA.termTotals[state.termKey] || 0);
-
   const set = new Set(state.selectedCourseCodes || []);
-  let sum = 0;
-  termCourses.forEach(c => { if (set.has(c.code)) sum += Number(c.credit || 0); });
-  return sum;
+  return termCourses.reduce((s,c)=> s + (set.has(c.code)? Number(c.credit||0):0), 0);
 }
-
 function computeFee(state, credits) {
-  const per = Number(state.perCreditFee || 0);
-  return credits * per;
+  return Number(state.perCreditFee||0) * Number(credits||0);
 }
 
-/* ==========================
-   UI rendering
-   ========================== */
+/* ===== Rendering ===== */
 function courseCard(course, actionLabel, onAction, disabled=false) {
   const div = document.createElement("div");
   div.className = "item";
@@ -326,26 +283,6 @@ function courseCard(course, actionLabel, onAction, disabled=false) {
   return div;
 }
 
-function renderElectiveSelectors(state) {
-  const box = $("electivesBox");
-  const termKey = state.termKey;
-
-  if (!isL4(termKey)) { box.classList.add("hidden"); return; }
-  box.classList.remove("hidden");
-
-  if (termKey === "L4S1") {
-    $("optALabel").textContent = "Option I (choose one pair)";
-    $("optBLabel").textContent = "Option II (choose one pair)";
-    fillElectiveDropdown("optASelect", DATA.options.OPT1, state.optAIndex);
-    fillElectiveDropdown("optBSelect", DATA.options.OPT2, state.optBIndex);
-  } else {
-    $("optALabel").textContent = "Option III (choose one pair)";
-    $("optBLabel").textContent = "Option IV (choose one pair)";
-    fillElectiveDropdown("optASelect", DATA.options.OPT3, state.optAIndex);
-    fillElectiveDropdown("optBSelect", DATA.options.OPT4, state.optBIndex);
-  }
-}
-
 function fillElectiveDropdown(selectId, optionArr, selectedIndex) {
   const sel = $(selectId);
   sel.innerHTML = "";
@@ -358,52 +295,56 @@ function fillElectiveDropdown(selectId, optionArr, selectedIndex) {
   });
 }
 
+function renderElectiveSelectors(state) {
+  const box = $("electivesBox");
+  if (!isL4(state.termKey)) { box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+
+  if (state.termKey === "L4S1") {
+    $("optALabel").textContent = "Option I (choose one pair)";
+    $("optBLabel").textContent = "Option II (choose one pair)";
+    fillElectiveDropdown("optASelect", DATA.options.OPT1, state.optAIndex);
+    fillElectiveDropdown("optBSelect", DATA.options.OPT2, state.optBIndex);
+  } else {
+    $("optALabel").textContent = "Option III (choose one pair)";
+    $("optBLabel").textContent = "Option IV (choose one pair)";
+    fillElectiveDropdown("optASelect", DATA.options.OPT3, state.optAIndex);
+    fillElectiveDropdown("optBSelect", DATA.options.OPT4, state.optBIndex);
+  }
+}
+
 function renderLists(state) {
   const termCourses = computeTermCourses(state.termKey, state.optAIndex, state.optBIndex);
 
-  // Regular auto select all
   if (state.enrollType === "REGULAR") state.selectedCourseCodes = termCourses.map(c => c.code);
 
   const selectedSet = new Set(state.selectedCourseCodes || []);
-  const available = $("availableList");
-  const selected = $("selectedList");
-  available.innerHTML = "";
-  selected.innerHTML = "";
+  $("availableList").innerHTML = "";
+  $("selectedList").innerHTML = "";
 
   termCourses.forEach(c => {
     const isSelected = selectedSet.has(c.code);
-    const disableActions = (state.enrollType === "REGULAR");
-    available.appendChild(
+    const locked = (state.enrollType === "REGULAR");
+    $("availableList").appendChild(
       courseCard(
         c,
         isSelected ? "Added" : "Add",
-        () => {
-          if (!selectedSet.has(c.code)) {
-            state.selectedCourseCodes.push(c.code);
-            syncAndRender(state);
-          }
-        },
-        disableActions || isSelected
+        () => { state.selectedCourseCodes.push(c.code); syncAndRender(state); },
+        locked || isSelected
       )
     );
   });
 
-  termCourses
-    .filter(c => selectedSet.has(c.code))
-    .forEach(c => {
-      const disableActions = (state.enrollType === "REGULAR");
-      selected.appendChild(
-        courseCard(
-          c,
-          "Remove",
-          () => {
-            state.selectedCourseCodes = state.selectedCourseCodes.filter(x => x !== c.code);
-            syncAndRender(state);
-          },
-          disableActions
-        )
-      );
-    });
+  termCourses.filter(c => selectedSet.has(c.code)).forEach(c => {
+    const locked = (state.enrollType === "REGULAR");
+    $("selectedList").appendChild(
+      courseCard(
+        c, "Remove",
+        () => { state.selectedCourseCodes = state.selectedCourseCodes.filter(x=>x!==c.code); syncAndRender(state); },
+        locked
+      )
+    );
+  });
 
   const credits = computeCreditsSelected(state, termCourses);
   const fee = computeFee(state, credits);
@@ -412,12 +353,10 @@ function renderLists(state) {
   $("feeText").textContent = moneyBDT(fee);
   $("modeText").textContent = state.enrollType;
 
-  $("btnClear").textContent = (state.enrollType === "REGULAR") ? "Locked (Regular)" : "Clear";
   $("btnClear").disabled = (state.enrollType === "REGULAR");
+  $("btnClear").textContent = (state.enrollType === "REGULAR") ? "Locked (Regular)" : "Clear";
 
-  // Pay button disabled if repeat and no courses selected
-  const payDisable = (state.enrollType === "REPEAT" && credits <= 0);
-  $("btnPayNow").disabled = payDisable;
+  $("btnPayNow").disabled = (state.enrollType === "REPEAT" && credits <= 0);
 }
 
 function renderPreviewSlip(state) {
@@ -425,24 +364,20 @@ function renderPreviewSlip(state) {
   const selectedSet = new Set(state.selectedCourseCodes || []);
   const per = Number(state.perCreditFee || 0);
 
-  let usedCredits = 0;
-  let rows = [];
+  const rows = (state.enrollType === "REGULAR")
+    ? termCourses
+    : termCourses.filter(c => selectedSet.has(c.code));
 
-  if (state.enrollType === "REGULAR") {
-    usedCredits = Number(DATA.termTotals[state.termKey] || 0);
-    rows = termCourses;
-  } else {
-    rows = termCourses.filter(c => selectedSet.has(c.code));
-    usedCredits = rows.reduce((a,c)=> a + Number(c.credit||0), 0);
-  }
+  const credits = (state.enrollType === "REGULAR")
+    ? Number(DATA.termTotals[state.termKey] || 0)
+    : rows.reduce((a,c)=> a + Number(c.credit||0), 0);
 
-  const totalFee = usedCredits * per;
-  const slip = $("slip");
+  const totalFee = credits * per;
 
-  slip.innerHTML = `
+  $("slip").innerHTML = `
     <div class="slip-title">
       <div>
-        <div style="font-weight:900;font-size:16px">Enrollment Slip (Preview)</div>
+        <div style="font-weight:1000;font-size:16px">Enrollment Slip (Preview)</div>
         <div class="muted" style="font-size:12px">${DATA.terms.find(t=>t.key===state.termKey)?.label || state.termKey} • ${state.enrollType}</div>
       </div>
       <div class="muted" style="font-size:12px;text-align:right">
@@ -450,25 +385,19 @@ function renderPreviewSlip(state) {
         <div>Total: <b>${moneyBDT(totalFee)}</b></div>
       </div>
     </div>
-
     <table>
-      <thead>
-        <tr><th>Course</th><th>Title</th><th class="right">Credit</th></tr>
-      </thead>
+      <thead><tr><th>Course</th><th>Title</th><th class="right">Credit</th></tr></thead>
       <tbody>
         ${
           rows.length
-          ? rows.map(c => `
-            <tr>
-              <td><b>${c.code}</b></td>
-              <td>${c.title}</td>
-              <td class="right">${to2(c.credit)}</td>
-            </tr>`).join("")
+          ? rows.map(c=>`
+            <tr><td><b>${c.code}</b></td><td>${c.title}</td><td class="right">${to2(c.credit)}</td></tr>
+          `).join("")
           : `<tr><td colspan="3" class="muted">No course selected.</td></tr>`
         }
       </tbody>
       <tfoot>
-        <tr><td colspan="2" class="right"><b>Total Credits</b></td><td class="right"><b>${to2(usedCredits)}</b></td></tr>
+        <tr><td colspan="2" class="right"><b>Total Credits</b></td><td class="right"><b>${to2(credits)}</b></td></tr>
         <tr><td colspan="2" class="right"><b>Total Fee</b></td><td class="right"><b>${moneyBDT(totalFee)}</b></td></tr>
       </tfoot>
     </table>
@@ -476,15 +405,24 @@ function renderPreviewSlip(state) {
 }
 
 /* ==========================
-   Payment Modal UI
+   Payment (SIMULATION)
    ========================== */
-
 function openPayModal(){
+  updatePaySummary();
+  $("payModal").classList.remove("hidden");
+  $("payStatus").classList.add("hidden");
+  $("successOverlay").classList.add("hidden");
+}
+
+function closePayModal(){
+  $("payModal").classList.add("hidden");
+}
+
+function updatePaySummary(){
   const termCourses = computeTermCourses(STATE.termKey, STATE.optAIndex, STATE.optBIndex);
   const credits = computeCreditsSelected(STATE, termCourses);
   const baseFee = computeFee(STATE, credits);
 
-  // gateway fee (demo): 0.0% for mobile, 1.5% for card
   const gatewayFee = (PAY.tab === "card") ? Math.round(baseFee * 0.015) : 0;
   const totalPayable = baseFee + gatewayFee;
 
@@ -495,26 +433,16 @@ function openPayModal(){
   $("payPerCreditText").textContent = moneyBDT(STATE.perCreditFee);
   $("payGatewayFee").textContent = moneyBDT(gatewayFee);
   $("payTotalText").textContent = moneyBDT(totalPayable);
-
-  $("payStatus").classList.add("hidden");
-  $("payModal").classList.remove("hidden");
-}
-
-function closePayModal(){
-  $("payModal").classList.add("hidden");
 }
 
 function setPayTab(tabName){
   PAY.tab = tabName;
-
   document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
   document.querySelector(`.tab[data-tab="${tabName}"]`)?.classList.add("active");
 
   $("tab-card").classList.toggle("hidden", tabName !== "card");
   $("tab-mbank").classList.toggle("hidden", tabName !== "mbank");
-
-  // refresh summary (gateway fee changes)
-  openPayModal();
+  updatePaySummary();
 }
 
 function setMBBrand(brand){
@@ -539,20 +467,61 @@ function validatePayment(){
     const ex = $("cardExp").value.trim();
     const cv = $("cardCvv").value.trim();
     const nm = $("cardName").value.trim();
-    if (!cn || cn.length < 12) return { ok:false, msg:"Card number invalid." };
+    if (!cn || cn.replace(/\s/g,"").length < 12) return { ok:false, msg:"Card number invalid." };
     if (!ex || ex.length < 4) return { ok:false, msg:"Expiry invalid." };
     if (!cv || cv.length < 3) return { ok:false, msg:"CVV invalid." };
     if (!nm) return { ok:false, msg:"Name on card required." };
-    return { ok:true, method:`CARD` };
-  } else {
-    const mb = $("mbNumber").value.trim();
-    const pin = $("mbPin").value.trim();
-    const otp = $("mbOtp").value.trim();
-    if (!mb || mb.length !== 11) return { ok:false, msg:"Mobile number must be 11 digits." };
-    if (!pin || pin.length < 4) return { ok:false, msg:"PIN invalid." };
-    if (!otp || otp.length < 4) return { ok:false, msg:"OTP invalid." };
-    return { ok:true, method:`${PAY.mbBrand}` };
+    return { ok:true, method:"CARD" };
   }
+
+  // mobile banking
+  const mb = $("mbNumber").value.trim();
+  const otp = $("mbOtp").value.trim();
+  const pin = $("mbPin").value.trim();
+
+  if (!mb || mb.length !== 11) return { ok:false, msg:"Mobile number must be 11 digits." };
+  if (!PAY.otp || PAY.otpFor !== mb) return { ok:false, msg:"OTP not generated. Enter mobile number again." };
+  if (otp !== PAY.otp) return { ok:false, msg:"OTP mismatch." };
+  if (!pin || pin.length < 4) return { ok:false, msg:"PIN invalid." };
+
+  return { ok:true, method: PAY.mbBrand };
+}
+
+function renderFinalSlip(p){
+  const dt = new Date(p.paidAt).toLocaleString();
+  $("finalSlip").innerHTML = `
+    <div class="slip-title">
+      <div>
+        <div style="font-weight:1000;font-size:16px">FINAL PAYMENT SLIP</div>
+        <div class="muted" style="font-size:12px">${p.termLabel} • ${p.enrollType} • Method: <b>${p.method}</b></div>
+      </div>
+      <div class="muted" style="font-size:12px;text-align:right">
+        <div><b>${p.paymentId}</b></div>
+        <div>${dt}</div>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Course</th><th>Title</th><th class="right">Credit</th></tr></thead>
+      <tbody>
+        ${
+          p.courses?.length
+          ? p.courses.map(c=>`
+            <tr><td><b>${c.code}</b></td><td>${c.title}</td><td class="right">${to2(c.credit)}</td></tr>
+          `).join("")
+          : `<tr><td colspan="3" class="muted">No courses</td></tr>`
+        }
+      </tbody>
+      <tfoot>
+        <tr><td colspan="2" class="right"><b>Total Credits</b></td><td class="right"><b>${to2(p.credits)}</b></td></tr>
+        <tr><td colspan="2" class="right"><b>Base Fee</b></td><td class="right"><b>${moneyBDT(p.baseFee)}</b></td></tr>
+        <tr><td colspan="2" class="right"><b>Gateway Fee</b></td><td class="right"><b>${moneyBDT(p.gatewayFee)}</b></td></tr>
+        <tr><td colspan="2" class="right"><b>Total Paid</b></td><td class="right"><b>${moneyBDT(p.totalPaid)}</b></td></tr>
+      </tfoot>
+    </table>
+    <div class="muted" style="margin-top:10px;font-size:12px">
+      Student: <b>${p.name}</b> (${p.userId}) • Dept: ${p.dept}
+    </div>
+  `;
 }
 
 function finalizePayment(method){
@@ -588,66 +557,45 @@ function finalizePayment(method){
   const payments = loadPayments();
   payments[CURRENT_USER.userId] = payment;
   savePayments(payments);
-
   renderFinalSlip(payment);
+
+  return payment;
 }
 
-function renderFinalSlip(p){
-  const dt = new Date(p.paidAt).toLocaleString();
-  $("finalSlip").innerHTML = `
-    <div class="slip-title">
-      <div>
-        <div style="font-weight:900;font-size:16px">FINAL PAYMENT SLIP</div>
-        <div class="muted" style="font-size:12px">${p.termLabel} • ${p.enrollType} • Method: <b>${p.method}</b></div>
-      </div>
-      <div class="muted" style="font-size:12px;text-align:right">
-        <div><b>${p.paymentId}</b></div>
-        <div>${dt}</div>
-      </div>
-    </div>
+/* ===== Success Animation ===== */
+function makeConfetti(){
+  const box = $("confetti");
+  box.innerHTML = "";
+  const n = 26;
+  for (let i=0;i<n;i++){
+    const p = document.createElement("i");
+    p.style.left = Math.floor(Math.random()*100) + "%";
+    p.style.animationDelay = (Math.random()*0.25) + "s";
+    p.style.transform = `translateY(0) rotate(${Math.random()*180}deg)`;
+    // random color (no hard-coded palette needed, but we can mix)
+    const hue = Math.floor(Math.random()*360);
+    p.style.background = `hsl(${hue} 90% 60%)`;
+    p.style.width = (8 + Math.random()*6) + "px";
+    p.style.height = (10 + Math.random()*10) + "px";
+    box.appendChild(p);
+  }
+}
 
-    <table>
-      <thead>
-        <tr><th>Course</th><th>Title</th><th class="right">Credit</th></tr>
-      </thead>
-      <tbody>
-        ${
-          p.courses?.length
-          ? p.courses.map(c=>`
-            <tr>
-              <td><b>${c.code}</b></td>
-              <td>${c.title}</td>
-              <td class="right">${to2(c.credit)}</td>
-            </tr>`).join("")
-          : `<tr><td colspan="3" class="muted">No courses</td></tr>`
-        }
-      </tbody>
-      <tfoot>
-        <tr><td colspan="2" class="right"><b>Total Credits</b></td><td class="right"><b>${to2(p.credits)}</b></td></tr>
-        <tr><td colspan="2" class="right"><b>Base Fee</b></td><td class="right"><b>${moneyBDT(p.baseFee)}</b></td></tr>
-        <tr><td colspan="2" class="right"><b>Gateway Fee</b></td><td class="right"><b>${moneyBDT(p.gatewayFee)}</b></td></tr>
-        <tr><td colspan="2" class="right"><b>Total Paid</b></td><td class="right"><b>${moneyBDT(p.totalPaid)}</b></td></tr>
-      </tfoot>
-    </table>
-
-    <div class="muted" style="margin-top:10px;font-size:12px">
-      Student: <b>${p.name}</b> (${p.userId}) • Dept: ${p.dept}
-    </div>
-  `;
+function showSuccessOverlay(payment){
+  $("successMeta").textContent = `${payment.method} • ${moneyBDT(payment.totalPaid)} • ${payment.paymentId}`;
+  makeConfetti();
+  $("successOverlay").classList.remove("hidden");
 }
 
 /* ==========================
-   State sync + render
+   State sync
    ========================== */
 function syncAndRender(state) {
   state.optAIndex = Number(state.optAIndex || 0);
   state.optBIndex = Number(state.optBIndex || 0);
   state.perCreditFee = Number(state.perCreditFee || 0);
 
-  if (!isL4(state.termKey)) {
-    state.optAIndex = 0;
-    state.optBIndex = 0;
-  }
+  if (!isL4(state.termKey)) { state.optAIndex = 0; state.optBIndex = 0; }
 
   const termCourses = computeTermCourses(state.termKey, state.optAIndex, state.optBIndex);
 
@@ -664,26 +612,24 @@ function syncAndRender(state) {
 }
 
 /* ==========================
-   App init
+   App
    ========================== */
-function showApp(user) {
+function showApp(user){
   CURRENT_USER = user;
 
   $("authCard").classList.add("hidden");
   $("app").classList.remove("hidden");
   $("btnLogout").classList.remove("hidden");
-
   $("welcomeText").textContent = `Welcome, ${user.name} (${user.userId}) • Dept: ${user.dept}`;
 
   renderTermOptions();
-
   STATE = loadEnrollState() || getDefaultEnrollState();
 
   $("enrollType").value = STATE.enrollType;
   $("termSelect").value = STATE.termKey;
   $("perCreditFee").value = STATE.perCreditFee;
 
-  // render last payment if exists
+  // last payment
   const payments = loadPayments();
   if (payments[user.userId]) renderFinalSlip(payments[user.userId]);
 
@@ -694,67 +640,40 @@ function showApp(user) {
     if (STATE.enrollType === "REPEAT") STATE.selectedCourseCodes = [];
     syncAndRender(STATE);
   };
-
   $("termSelect").onchange = (e) => {
     STATE.termKey = e.target.value;
     if (STATE.enrollType === "REPEAT") STATE.selectedCourseCodes = [];
     syncAndRender(STATE);
   };
+  $("perCreditFee").oninput = (e) => { STATE.perCreditFee = Number(e.target.value || 0); syncAndRender(STATE); };
+  $("optASelect").onchange = (e) => { STATE.optAIndex = Number(e.target.value||0); if (STATE.enrollType==="REPEAT") STATE.selectedCourseCodes=[]; syncAndRender(STATE); };
+  $("optBSelect").onchange = (e) => { STATE.optBIndex = Number(e.target.value||0); if (STATE.enrollType==="REPEAT") STATE.selectedCourseCodes=[]; syncAndRender(STATE); };
 
-  $("perCreditFee").oninput = (e) => {
-    STATE.perCreditFee = Number(e.target.value || 0);
-    syncAndRender(STATE);
-  };
-
-  $("optASelect").onchange = (e) => {
-    STATE.optAIndex = Number(e.target.value || 0);
-    if (STATE.enrollType === "REPEAT") STATE.selectedCourseCodes = [];
-    syncAndRender(STATE);
-  };
-
-  $("optBSelect").onchange = (e) => {
-    STATE.optBIndex = Number(e.target.value || 0);
-    if (STATE.enrollType === "REPEAT") STATE.selectedCourseCodes = [];
-    syncAndRender(STATE);
-  };
-
-  $("btnClear").onclick = () => {
-    if (STATE.enrollType === "REGULAR") return;
-    STATE.selectedCourseCodes = [];
-    syncAndRender(STATE);
-  };
-
+  $("btnClear").onclick = () => { if (STATE.enrollType==="REGULAR") return; STATE.selectedCourseCodes=[]; syncAndRender(STATE); };
   $("btnSlip").onclick = () => renderPreviewSlip(STATE);
-
-  $("btnPayNow").onclick = () => {
-    renderPreviewSlip(STATE);
-    openPayModal();
-  };
+  $("btnPayNow").onclick = () => { renderPreviewSlip(STATE); openPayModal(); };
 
   $("btnPrintFinal").onclick = () => window.print();
 }
 
 /* ==========================
-   Auth handlers
+   Auth
    ========================== */
-function login(userId, password) {
-  const users = loadUsers();
-  const u = users.find(x => x.userId === userId && x.password === password);
+function login(userId, password){
+  const u = loadUsers().find(x => x.userId===userId && x.password===password);
   if (!u) return alert("Login failed. Check User ID / Password.");
   setSession(u.userId);
   showApp(u);
 }
-
-function registerUser(userId, password, name, dept) {
+function registerUser(userId, password, name, dept){
   if (!userId || !password) return alert("User ID & Password required.");
   const users = loadUsers();
-  if (users.some(u => u.userId === userId)) return alert("User already exists.");
-  users.push({ userId, password, name: name || "Student", dept: dept || "CSE" });
+  if (users.some(u => u.userId===userId)) return alert("User already exists.");
+  users.push({ userId, password, name: name||"Student", dept: dept||"CSE" });
   saveUsers(users);
   alert("Account created! Now login.");
 }
-
-function resetAll() {
+function resetAll(){
   localStorage.removeItem(LS_USERS);
   localStorage.removeItem(LS_SESSION);
   localStorage.removeItem(LS_ENROLL);
@@ -764,60 +683,80 @@ function resetAll() {
 }
 
 /* ==========================
-   Payment modal events (bind once)
+   Payment modal bindings
    ========================== */
 function bindPaymentEvents(){
-  $("btnClosePay").onclick = closePayModal;
+  $("btnClosePay").onclick = () => closePayModal();
 
-  // tabs
   document.querySelectorAll(".tab").forEach(btn => {
     btn.onclick = () => setPayTab(btn.dataset.tab);
   });
 
-  // brands
   document.querySelectorAll(".brandBtn").forEach(btn => {
     btn.onclick = () => setMBBrand(btn.dataset.brand);
   });
 
-  // pay actions
-  $("btnPayCard").onclick = () => {
-    PAY.tab = "card";
-    const v = validatePayment();
-    if (!v.ok) return showPayStatus(v.msg);
-
-    showPayStatus("Processing card payment… (simulation)");
-    setTimeout(() => {
-      finalizePayment("CARD");
-      showPayStatus("✅ Payment successful!");
-      setTimeout(() => { closePayModal(); }, 700);
-    }, 900);
-  };
-
-  $("btnPayMB").onclick = () => {
-    PAY.tab = "mbank";
-    const v = validatePayment();
-    if (!v.ok) return showPayStatus(v.msg);
-
-    showPayStatus(`Processing ${PAY.mbBrand} payment… (simulation)`);
-    setTimeout(() => {
-      finalizePayment(PAY.mbBrand);
-      showPayStatus("✅ Payment successful!");
-      setTimeout(() => { closePayModal(); }, 700);
-    }, 900);
-  };
-
-  // format card number spacing
+  // card formatting
   $("cardNumber").addEventListener("input", (e) => {
     let v = e.target.value.replace(/\D/g,"").slice(0,16);
     v = v.replace(/(\d{4})(?=\d)/g, "$1 ");
     e.target.value = v;
   });
-
   $("cardExp").addEventListener("input", (e) => {
     let v = e.target.value.replace(/\D/g,"").slice(0,4);
     if (v.length >= 3) v = v.slice(0,2) + "/" + v.slice(2);
     e.target.value = v;
   });
+
+  // ✅ OTP auto-generate when mobile number is valid (11 digits)
+  $("mbNumber").addEventListener("input", (e) => {
+    const v = e.target.value.replace(/\D/g,"").slice(0,11);
+    e.target.value = v;
+
+    if (v.length === 11) {
+      PAY.otp = genOTP();
+      PAY.otpFor = v;
+      $("mbOtp").value = PAY.otp; // auto fill (demo)
+      $("otpHint").textContent = `OTP generated ✅ (Demo OTP: ${PAY.otp})`;
+      $("otpHint").classList.remove("muted");
+    } else {
+      PAY.otp = null;
+      PAY.otpFor = null;
+      $("mbOtp").value = "";
+      $("otpHint").textContent = `Enter mobile number to get OTP`;
+      $("otpHint").classList.add("muted");
+    }
+  });
+
+  // pay card
+  $("btnPayCard").onclick = () => {
+    PAY.tab = "card";
+    updatePaySummary();
+    const v = validatePayment();
+    if (!v.ok) return showPayStatus(v.msg);
+
+    showPayStatus("Processing card payment…");
+    setTimeout(() => {
+      const payment = finalizePayment("CARD");
+      showSuccessOverlay(payment);
+      setTimeout(() => { closePayModal(); }, 1400);
+    }, 900);
+  };
+
+  // pay mobile
+  $("btnPayMB").onclick = () => {
+    PAY.tab = "mbank";
+    updatePaySummary();
+    const v = validatePayment();
+    if (!v.ok) return showPayStatus(v.msg);
+
+    showPayStatus(`Processing ${PAY.mbBrand} payment…`);
+    setTimeout(() => {
+      const payment = finalizePayment(PAY.mbBrand);
+      showSuccessOverlay(payment);
+      setTimeout(() => { closePayModal(); }, 1400);
+    }, 900);
+  };
 }
 
 /* ==========================
@@ -829,14 +768,12 @@ function bindPaymentEvents(){
 
   $("btnLogin").onclick = () => login($("loginUser").value.trim(), $("loginPass").value.trim());
 
-  $("btnRegister").onclick = () => {
-    registerUser(
-      $("regUser").value.trim(),
-      $("regPass").value.trim(),
-      $("regName").value.trim(),
-      $("regDept").value.trim()
-    );
-  };
+  $("btnRegister").onclick = () => registerUser(
+    $("regUser").value.trim(),
+    $("regPass").value.trim(),
+    $("regName").value.trim(),
+    $("regDept").value.trim()
+  );
 
   $("btnCreateDemo").onclick = () => {
     const demoId = "2002010";
