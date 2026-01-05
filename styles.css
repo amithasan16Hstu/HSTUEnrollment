@@ -1,0 +1,285 @@
+:root{
+  --bg:#0b1220;
+  --card:rgba(255,255,255,.08);
+  --stroke:rgba(255,255,255,.14);
+  --text:rgba(255,255,255,.92);
+  --muted:rgba(255,255,255,.65);
+  --shadow: 0 20px 70px rgba(0,0,0,.45);
+  --radius:18px;
+  --grad: linear-gradient(135deg, rgba(99,102,241,.95), rgba(16,185,129,.9));
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  color:var(--text);
+  background: radial-gradient(1200px 600px at 20% 10%, rgba(99,102,241,.35), transparent 60%),
+              radial-gradient(900px 500px at 90% 0%, rgba(16,185,129,.25), transparent 55%),
+              radial-gradient(900px 600px at 30% 100%, rgba(244,63,94,.18), transparent 55%),
+              var(--bg);
+  overflow-x:hidden;
+}
+
+.bg-blur{
+  position:fixed; inset:-40px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.08)' stroke-width='1'%3E%3Cpath d='M0 40h160M0 80h160M0 120h160'/%3E%3Cpath d='M40 0v160M80 0v160M120 0v160'/%3E%3C/g%3E%3C/svg%3E");
+  opacity:.35;
+  pointer-events:none;
+}
+
+.topbar{
+  position:sticky; top:0; z-index:5;
+  display:flex; justify-content:space-between; align-items:center;
+  padding:18px 20px;
+  background: rgba(10,16,28,.6);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  backdrop-filter: blur(14px);
+}
+
+.brand{display:flex; gap:14px; align-items:center}
+.logo{
+  width:44px; height:44px;
+  border-radius:14px;
+  display:grid; place-items:center;
+  background: var(--grad);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  font-weight:800;
+}
+.title{font-size:18px; font-weight:800; letter-spacing:.2px}
+.subtitle{font-size:12px; color:var(--muted)}
+
+.container{max-width:1100px; margin:22px auto; padding:0 16px 60px}
+
+.card{
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  backdrop-filter: blur(14px);
+}
+
+.card-head{display:flex; justify-content:space-between; align-items:flex-end; gap:14px; flex-wrap:wrap}
+.card-head h2{margin:0; font-size:20px}
+.card-head p{margin:0}
+
+.muted{color:var(--muted)}
+.hidden{display:none!important}
+.mt{margin-top:14px}
+.small{font-size:12px}
+.full{width:100%}
+
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px}
+@media (max-width:860px){
+  .grid2,.grid3{grid-template-columns:1fr}
+  .split{grid-template-columns:1fr}
+  .payGrid{grid-template-columns:1fr !important;}
+}
+
+.field label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px}
+.field input, .field select{
+  width:100%;
+  padding:12px 12px;
+  border-radius: 14px;
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.25);
+  color: var(--text);
+  outline:none;
+}
+.field input:focus, .field select:focus{border-color: rgba(99,102,241,.7)}
+
+.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+.divider{height:1px; background:rgba(255,255,255,.12); margin:14px 0}
+
+.btn{
+  border:1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.10);
+  color: var(--text);
+  padding:10px 14px;
+  border-radius: 14px;
+  cursor:pointer;
+  font-weight:700;
+  transition:.18s ease;
+}
+.btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.14)}
+.btn.primary{background: var(--grad); border:none}
+.btn.ghost{background: transparent}
+.btn.danger{background: rgba(244,63,94,.18); border-color: rgba(244,63,94,.35)}
+.btn:disabled{opacity:.55; cursor:not-allowed; transform:none}
+
+.section-title{font-weight:800; margin:10px 0 8px}
+.split{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.list{
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding:10px;
+  background: rgba(0,0,0,.18);
+  min-height: 220px;
+}
+.item{
+  display:flex; justify-content:space-between; align-items:flex-start;
+  gap:10px;
+  padding:10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  margin-bottom:10px;
+}
+.item:last-child{margin-bottom:0}
+.item .left{display:flex; flex-direction:column; gap:3px}
+.code{font-weight:900}
+.name{font-size:13px; color:rgba(255,255,255,.80)}
+.meta{font-size:12px; color:var(--muted)}
+.badge{
+  font-size:12px;
+  padding:4px 10px;
+  border-radius: 999px;
+  background: rgba(99,102,241,.18);
+  border:1px solid rgba(99,102,241,.28);
+  align-self:flex-start;
+  white-space:nowrap;
+}
+
+.summary-bar{
+  margin-top:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  padding:12px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  background: rgba(0,0,0,.18);
+}
+
+.pill{
+  display:flex; gap:10px; align-items:center;
+  padding:10px 12px;
+  border-radius: 14px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+}
+.pill .k{font-size:12px; color:var(--muted)}
+.pill .v{font-weight:900}
+.actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+
+.slip{
+  border-radius: 16px;
+  border:1px dashed rgba(255,255,255,.22);
+  background: rgba(0,0,0,.18);
+  padding:14px;
+}
+.slip .slip-title{
+  display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
+  padding-bottom:10px;
+  border-bottom:1px solid rgba(255,255,255,.10);
+  margin-bottom:10px;
+}
+.slip table{width:100%; border-collapse:collapse; font-size:13px}
+.slip th,.slip td{padding:8px; border-bottom:1px solid rgba(255,255,255,.08); text-align:left}
+.slip .right{text-align:right}
+
+.electives{
+  margin-top:10px;
+  padding:12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.14);
+}
+.electives-title{font-weight:900; margin-bottom:8px}
+.hint{font-size:12px; color:var(--muted); margin-top:8px}
+.footer{margin-top:12px; font-size:12px}
+
+/* ===== Modal ===== */
+.modal{
+  position:fixed; inset:0;
+  background: rgba(0,0,0,.65);
+  display:grid; place-items:center;
+  z-index:60;
+}
+.modalCard{
+  width:min(980px, 94vw);
+  background: rgba(15,18,28,.96);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 18px;
+  box-shadow: 0 30px 90px rgba(0,0,0,.65);
+  overflow:hidden;
+}
+.modalHead{
+  padding:14px 14px;
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  border-bottom:1px solid rgba(255,255,255,.10);
+}
+.modalTitle{font-weight:900}
+.modalBody{padding:14px}
+
+/* ===== Payment UI ===== */
+.payGrid{display:grid; grid-template-columns:1.35fr .65fr; gap:14px;}
+.payTabs{display:flex; gap:10px; margin-bottom:10px}
+.tab{
+  flex:1;
+  padding:10px 12px;
+  border-radius: 14px;
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  cursor:pointer;
+  font-weight:800;
+}
+.tab.active{
+  background: var(--grad);
+  border:none;
+}
+.tabPanel{padding:10px; border-radius:16px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05)}
+.mbankBrands{display:flex; gap:10px}
+.brandBtn{
+  flex:1;
+  padding:10px 12px;
+  border-radius: 14px;
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  cursor:pointer;
+  font-weight:900;
+}
+.brandBtn.active{background: rgba(16,185,129,.18); border-color: rgba(16,185,129,.35)}
+.paySummary{
+  border-radius: 18px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.05);
+  padding:14px;
+}
+.payBadge{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(16,185,129,.35);
+  background: rgba(16,185,129,.14);
+  font-size:12px;
+  font-weight:900;
+}
+.payAmount{
+  margin-top:10px;
+  font-size:30px;
+  font-weight:1000;
+  letter-spacing:-.3px;
+}
+.miniRow{
+  display:flex; justify-content:space-between; gap:10px;
+  padding:8px 0;
+}
+.miniRow.total{
+  font-weight:1000;
+  font-size:16px;
+}
+.payStatus{
+  margin-top:12px;
+  padding:10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(251,191,36,.35);
+  background: rgba(251,191,36,.12);
+}
