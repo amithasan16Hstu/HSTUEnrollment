@@ -105,7 +105,6 @@
           </div>
         </div>
 
-        <!-- Elective selectors -->
         <div id="electivesBox" class="electives hidden">
           <div class="electives-title">Level 4 Options</div>
           <div class="grid2">
@@ -156,7 +155,6 @@
         </div>
       </section>
 
-      <!-- SLIP -->
       <section class="card mt">
         <div class="card-head">
           <h2>Enrollment Slip (Preview)</h2>
@@ -167,7 +165,6 @@
         </div>
       </section>
 
-      <!-- FINAL PAYMENT SLIP -->
       <section class="card mt">
         <div class="card-head">
           <h2>Final Payment Slip</h2>
@@ -182,7 +179,7 @@
       </section>
 
       <footer class="footer muted">
-        This is a demo payment UI (simulation). Real payment needs backend gateway API.
+        Demo payment UI (simulation). Real SMS/OTP + real payment needs backend gateway API.
       </footer>
     </section>
   </main>
@@ -230,37 +227,47 @@
               <div class="row mt">
                 <button id="btnPayCard" class="btn primary full">Pay with Card</button>
               </div>
-              <div class="hint mt">Demo: Just fill anything and pay (simulation)</div>
+              <div class="hint mt">Demo: fill anything and pay (simulation)</div>
             </div>
 
             <!-- MOBILE BANKING -->
             <div id="tab-mbank" class="tabPanel hidden">
               <div class="mbankBrands">
-                <button class="brandBtn active" data-brand="bKash">bKash</button>
-                <button class="brandBtn" data-brand="Nagad">Nagad</button>
-                <button class="brandBtn" data-brand="Rocket">Rocket</button>
+                <button class="brandBtn active" data-brand="bKash" title="bKash">
+                  <span class="brandIcon bk"></span>
+                  <span>bKash</span>
+                </button>
+                <button class="brandBtn" data-brand="Nagad" title="Nagad">
+                  <span class="brandIcon ng"></span>
+                  <span>Nagad</span>
+                </button>
+                <button class="brandBtn" data-brand="Rocket" title="Rocket">
+                  <span class="brandIcon rk"></span>
+                  <span>Rocket</span>
+                </button>
               </div>
 
               <div class="field mt">
                 <label>Mobile Number</label>
                 <input id="mbNumber" type="text" inputmode="numeric" placeholder="01XXXXXXXXX" maxlength="11"/>
+                <div class="muted small mt" id="otpHint">Enter mobile number to get OTP</div>
               </div>
 
               <div class="grid2">
                 <div class="field">
-                  <label>PIN</label>
-                  <input id="mbPin" type="password" placeholder="••••" maxlength="6"/>
+                  <label>OTP</label>
+                  <input id="mbOtp" type="text" inputmode="numeric" placeholder="Auto OTP" maxlength="6"/>
                 </div>
                 <div class="field">
-                  <label>OTP</label>
-                  <input id="mbOtp" type="text" inputmode="numeric" placeholder="123456" maxlength="6"/>
+                  <label>PIN</label>
+                  <input id="mbPin" type="password" placeholder="••••" maxlength="6"/>
                 </div>
               </div>
 
               <div class="row mt">
                 <button id="btnPayMB" class="btn primary full">Pay with Mobile Banking</button>
               </div>
-              <div class="hint mt">Demo: OTP/PIN just for UI (simulation)</div>
+              <div class="hint mt">OTP auto generate হবে (demo). PIN দিয়ে confirm.</div>
             </div>
           </div>
 
@@ -291,13 +298,29 @@
               </div>
 
               <div class="hint mt">
-                This is a simulated gateway UI. Backend integration needed for real payments.
+                This is a simulated gateway UI. Real SMS/OTP + real transactions need backend.
               </div>
             </div>
           </div>
         </div>
 
         <div id="payStatus" class="payStatus hidden"></div>
+
+        <!-- SUCCESS OVERLAY -->
+        <div id="successOverlay" class="successOverlay hidden">
+          <div class="successCard">
+            <div class="checkWrap">
+              <svg class="checkSvg" viewBox="0 0 52 52">
+                <circle class="checkCircle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="checkMark" fill="none" d="M14 27 l7 7 l17 -17"/>
+              </svg>
+            </div>
+            <div class="successText">Payment Successfully</div>
+            <div class="muted small" id="successMeta">—</div>
+          </div>
+          <div id="confetti" class="confetti"></div>
+        </div>
+
       </div>
     </div>
   </div>
