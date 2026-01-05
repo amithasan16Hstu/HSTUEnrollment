@@ -14,7 +14,7 @@
       <div class="logo">HSTU</div>
       <div>
         <div class="title">Semester Enrollment Portal</div>
-        <div class="subtitle">Enrollment • Payment • Final Slip</div>
+        <div class="subtitle">Enrollment • Payment • Payment Slip</div>
       </div>
     </div>
     <div class="top-actions">
@@ -24,11 +24,11 @@
   </header>
 
   <main class="container">
-    <!-- AUTH CARD -->
+    <!-- AUTH -->
     <section id="authCard" class="card">
       <div class="card-head">
         <h2>Student Login</h2>
-        <p class="muted">Please sign in with your Student ID and Password.</p>
+        <p class="muted">Sign in with your Student ID and Password.</p>
       </div>
 
       <div class="grid2">
@@ -44,7 +44,6 @@
 
       <div class="row">
         <button id="btnLogin" class="btn primary">Sign In</button>
-        <button id="btnCreateDemo" class="btn">Create Student (Local)</button>
       </div>
 
       <div class="divider"></div>
@@ -117,8 +116,7 @@
             </div>
           </div>
           <div class="hint">
-            In Regular mode, courses are assigned automatically based on the selected semester.
-            In Repeat/Improve mode, you can add or remove courses manually.
+            Regular mode assigns courses automatically. Repeat/Improve mode allows manual course selection.
           </div>
         </div>
 
@@ -158,7 +156,7 @@
       <section class="card mt">
         <div class="card-head">
           <h2>Enrollment Slip</h2>
-          <p class="muted">Review your selected courses and fee breakdown.</p>
+          <p class="muted">Review your courses and fee breakdown.</p>
         </div>
         <div id="slip" class="slip">
           <div class="muted">Slip will appear here.</div>
@@ -168,7 +166,7 @@
       <section class="card mt">
         <div class="card-head">
           <h2>Payment Slip</h2>
-          <p class="muted">Your payment confirmation will be generated after a successful transaction.</p>
+          <p class="muted">Generated after successful payment.</p>
         </div>
         <div id="finalSlip" class="slip">
           <div class="muted">No payment recorded yet.</div>
@@ -183,6 +181,141 @@
       </footer>
     </section>
   </main>
+
+  <!-- PAYMENT MODAL -->
+  <div id="payModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modalCard">
+      <div class="modalHead">
+        <div>
+          <div class="modalTitle">Payment Gateway</div>
+          <div class="muted small" id="payMeta">—</div>
+        </div>
+        <button id="btnClosePay" class="btn ghost">Close</button>
+      </div>
+
+      <div class="modalBody">
+        <div class="payGrid">
+          <div class="payLeft">
+            <div class="payTabs">
+              <button class="tab active" data-tab="card">Credit / Debit Card</button>
+              <button class="tab" data-tab="mbank">Mobile Banking</button>
+            </div>
+
+            <!-- CARD -->
+            <div id="tab-card" class="tabPanel">
+              <div class="field">
+                <label>Card Number</label>
+                <input id="cardNumber" type="text" inputmode="numeric" placeholder="1234 5678 9012 3456" maxlength="19"/>
+              </div>
+              <div class="grid2">
+                <div class="field">
+                  <label>Expiry (MM/YY)</label>
+                  <input id="cardExp" type="text" placeholder="08/28" maxlength="5"/>
+                </div>
+                <div class="field">
+                  <label>CVV</label>
+                  <input id="cardCvv" type="password" inputmode="numeric" placeholder="123" maxlength="4"/>
+                </div>
+              </div>
+              <div class="field">
+                <label>Name on Card</label>
+                <input id="cardName" type="text" placeholder="Name as printed on card" />
+              </div>
+
+              <div class="row mt">
+                <button id="btnPayCard" class="btn primary full">Pay with Card</button>
+              </div>
+            </div>
+
+            <!-- MOBILE BANKING -->
+            <div id="tab-mbank" class="tabPanel hidden">
+              <div class="mbankBrands">
+                <button class="brandBtn active" data-brand="bKash" title="bKash">
+                  <span class="brandIcon bk"></span>
+                  <span>bKash</span>
+                </button>
+                <button class="brandBtn" data-brand="Nagad" title="Nagad">
+                  <span class="brandIcon ng"></span>
+                  <span>Nagad</span>
+                </button>
+                <button class="brandBtn" data-brand="Rocket" title="Rocket">
+                  <span class="brandIcon rk"></span>
+                  <span>Rocket</span>
+                </button>
+              </div>
+
+              <div class="field mt">
+                <label>Mobile Number</label>
+                <input id="mbNumber" type="text" inputmode="numeric" placeholder="01XXXXXXXXX" maxlength="11"/>
+                <div class="muted small mt" id="otpHint">Enter mobile number to receive an OTP.</div>
+              </div>
+
+              <div class="grid2">
+                <div class="field">
+                  <label>OTP</label>
+                  <input id="mbOtp" type="text" inputmode="numeric" placeholder="OTP" maxlength="6"/>
+                </div>
+                <div class="field">
+                  <label>PIN</label>
+                  <input id="mbPin" type="password" placeholder="PIN" maxlength="6"/>
+                </div>
+              </div>
+
+              <div class="row mt">
+                <button id="btnPayMB" class="btn primary full">Pay with Mobile Banking</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="payRight">
+            <div class="paySummary">
+              <div class="payBadge">Secure Checkout</div>
+              <div class="payAmount" id="payAmountText">BDT 0</div>
+              <div class="muted small" id="payTermText">—</div>
+              <div class="divider"></div>
+
+              <div class="miniRow">
+                <div class="muted">Credits</div>
+                <div id="payCreditsText">0.00</div>
+              </div>
+              <div class="miniRow">
+                <div class="muted">Per Credit</div>
+                <div id="payPerCreditText">BDT 120</div>
+              </div>
+              <div class="miniRow">
+                <div class="muted">Gateway Fee</div>
+                <div id="payGatewayFee">BDT 0</div>
+              </div>
+
+              <div class="divider"></div>
+              <div class="miniRow total">
+                <div>Total Payable</div>
+                <div id="payTotalText">BDT 0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="payStatus" class="payStatus hidden"></div>
+
+        <!-- SUCCESS OVERLAY -->
+        <div id="successOverlay" class="successOverlay hidden">
+          <div class="successCard">
+            <div class="checkWrap">
+              <svg class="checkSvg" viewBox="0 0 52 52">
+                <circle class="checkCircle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="checkMark" fill="none" d="M14 27 l7 7 l17 -17"/>
+              </svg>
+            </div>
+            <div class="successText">Payment Successfully</div>
+            <div class="muted small" id="successMeta">—</div>
+          </div>
+          <div id="confetti" class="confetti"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
