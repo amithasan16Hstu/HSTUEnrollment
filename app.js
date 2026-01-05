@@ -628,6 +628,7 @@ function showApp(user){
   $("enrollType").value = STATE.enrollType;
   $("termSelect").value = STATE.termKey;
   $("perCreditFee").value = STATE.perCreditFee;
+   $("welcomeText").textContent = `Welcome, ${user.name} (${user.userId}) • Dept: ${user.dept}`;
 
   // last payment
   const payments = loadPayments();
@@ -800,4 +801,5 @@ function bindPaymentEvents(){
     if (u) showApp(u);
   }
 })();
+
 
