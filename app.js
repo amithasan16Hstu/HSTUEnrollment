@@ -620,7 +620,7 @@ function showApp(user){
   $("authCard").classList.add("hidden");
   $("app").classList.remove("hidden");
   $("btnLogout").classList.remove("hidden");
-  $("welcomeText").textContent = `Welcome, ${user.name} (${user.userId}) • Dept: ${user.dept}`;
+  
 
   renderTermOptions();
   STATE = loadEnrollState() || getDefaultEnrollState();
@@ -800,3 +800,4 @@ function bindPaymentEvents(){
     if (u) showApp(u);
   }
 })();
+
