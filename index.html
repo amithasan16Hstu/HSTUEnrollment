@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>HSTU Enrollment System</title>
+  <title>HSTU | Semester Enrollment Portal</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -13,12 +13,12 @@
     <div class="brand">
       <div class="logo">HSTU</div>
       <div>
-        <div class="title">Semester Enrollment</div>
-        <div class="subtitle">Enrollment → Payment → Final Slip</div>
+        <div class="title">Semester Enrollment Portal</div>
+        <div class="subtitle">Enrollment • Payment • Final Slip</div>
       </div>
     </div>
     <div class="top-actions">
-      <button id="btnReset" class="btn ghost" title="Reset demo data">Reset</button>
+      <button id="btnReset" class="btn ghost" title="Reset">Reset</button>
       <button id="btnLogout" class="btn danger hidden">Logout</button>
     </div>
   </header>
@@ -27,44 +27,44 @@
     <!-- AUTH CARD -->
     <section id="authCard" class="card">
       <div class="card-head">
-        <h2>Login</h2>
-        <p class="muted">Account: <b></b> / <b></b></p>
+        <h2>Student Login</h2>
+        <p class="muted">Please sign in with your Student ID and Password.</p>
       </div>
 
       <div class="grid2">
         <div class="field">
-          <label>User ID</label>
+          <label>Student ID</label>
           <input id="loginUser" type="text" placeholder="e.g., 2002010" />
         </div>
         <div class="field">
           <label>Password</label>
-          <input id="loginPass" type="password" placeholder="••••" />
+          <input id="loginPass" type="password" placeholder="••••••••" />
         </div>
       </div>
 
       <div class="row">
-        <button id="btnLogin" class="btn primary">Login</button>
-        <button id="btnCreateDemo" class="btn">Create Student</button>
+        <button id="btnLogin" class="btn primary">Sign In</button>
+        <button id="btnCreateDemo" class="btn">Create Student (Local)</button>
       </div>
 
       <div class="divider"></div>
 
       <details>
-        <summary class="muted">Create New User</summary>
+        <summary class="muted">Create Student Account</summary>
         <div class="grid2 mt">
           <div class="field">
-            <label>New User ID</label>
+            <label>Student ID</label>
             <input id="regUser" type="text" placeholder="e.g., 2102033" />
           </div>
           <div class="field">
-            <label>New Password</label>
-            <input id="regPass" type="password" placeholder="set password" />
+            <label>Password</label>
+            <input id="regPass" type="password" placeholder="Set a password" />
           </div>
         </div>
         <div class="grid2">
           <div class="field">
             <label>Full Name</label>
-            <input id="regName" type="text" placeholder="Amit Hasan Sikder" />
+            <input id="regName" type="text" placeholder="Your full name" />
           </div>
           <div class="field">
             <label>Department</label>
@@ -81,7 +81,7 @@
     <section id="app" class="hidden">
       <section class="card">
         <div class="card-head">
-          <h2>Enrollment Panel</h2>
+          <h2>Enrollment</h2>
         </div>
 
         <div class="grid3">
@@ -105,7 +105,7 @@
         </div>
 
         <div id="electivesBox" class="electives hidden">
-          <div class="electives-title">Level 4 Options</div>
+          <div class="electives-title">Elective Selection</div>
           <div class="grid2">
             <div class="field">
               <label id="optALabel">Option A</label>
@@ -117,6 +117,8 @@
             </div>
           </div>
           <div class="hint">
+            In Regular mode, courses are assigned automatically based on the selected semester.
+            In Repeat/Improve mode, you can add or remove courses manually.
           </div>
         </div>
 
@@ -148,185 +150,40 @@
           <div class="actions">
             <button id="btnClear" class="btn ghost">Clear</button>
             <button id="btnSlip" class="btn">Preview Slip</button>
-            <button id="btnPayNow" class="btn primary">Pay Now</button>
+            <button id="btnPayNow" class="btn primary">Proceed to Payment</button>
           </div>
         </div>
       </section>
 
       <section class="card mt">
         <div class="card-head">
-          <h2>Enrollment Slip (Preview)</h2>
-          <p class="muted"></p>
+          <h2>Enrollment Slip</h2>
+          <p class="muted">Review your selected courses and fee breakdown.</p>
         </div>
         <div id="slip" class="slip">
-          <div class="muted">Slip will appear here…</div>
+          <div class="muted">Slip will appear here.</div>
         </div>
       </section>
 
       <section class="card mt">
         <div class="card-head">
-          <h2>Final Payment Slip</h2>
-          <p class="muted"></p>
+          <h2>Payment Slip</h2>
+          <p class="muted">Your payment confirmation will be generated after a successful transaction.</p>
         </div>
         <div id="finalSlip" class="slip">
-          <div class="muted">No payment yet.</div>
+          <div class="muted">No payment recorded yet.</div>
         </div>
         <div class="row mt">
-          <button id="btnPrintFinal" class="btn">Print / Save as PDF</button>
+          <button id="btnPrintFinal" class="btn">Print / Save</button>
         </div>
       </section>
 
       <footer class="footer muted">
-        HSTU Enrollment System
+        © HSTU • Semester Enrollment Portal
       </footer>
     </section>
   </main>
 
-  <!-- PAYMENT MODAL -->
-  <div id="payModal" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modalCard">
-      <div class="modalHead">
-        <div>
-          <div class="modalTitle">Payment Gateway</div>
-          <div class="muted small" id="payMeta">—</div>
-        </div>
-        <button id="btnClosePay" class="btn ghost">Close</button>
-      </div>
-
-      <div class="modalBody">
-        <div class="payGrid">
-          <div class="payLeft">
-            <div class="payTabs">
-              <button class="tab active" data-tab="card">Credit / Debit Card</button>
-              <button class="tab" data-tab="mbank">Mobile Banking</button>
-            </div>
-
-            <!-- CARD -->
-            <div id="tab-card" class="tabPanel">
-              <div class="field">
-                <label>Card Number</label>
-                <input id="cardNumber" type="text" inputmode="numeric" placeholder="1234 5678 9012 3456" maxlength="19"/>
-              </div>
-              <div class="grid2">
-                <div class="field">
-                  <label>Expiry (MM/YY)</label>
-                  <input id="cardExp" type="text" placeholder="08/28" maxlength="5"/>
-                </div>
-                <div class="field">
-                  <label>CVV</label>
-                  <input id="cardCvv" type="password" inputmode="numeric" placeholder="123" maxlength="4"/>
-                </div>
-              </div>
-              <div class="field">
-                <label>Name on Card</label>
-                <input id="cardName" type="text" placeholder="AMIT HASAN" />
-              </div>
-
-              <div class="row mt">
-                <button id="btnPayCard" class="btn primary full">Pay with Card</button>
-              </div>
-              <div class="hint mt"></div>
-            </div>
-
-            <!-- MOBILE BANKING -->
-            <div id="tab-mbank" class="tabPanel hidden">
-              <div class="mbankBrands">
-                <button class="brandBtn active" data-brand="bKash" title="bKash">
-                  <span class="brandIcon bk"></span>
-                  <span>bKash</span>
-                </button>
-                <button class="brandBtn" data-brand="Nagad" title="Nagad">
-                  <span class="brandIcon ng"></span>
-                  <span>Nagad</span>
-                </button>
-                <button class="brandBtn" data-brand="Rocket" title="Rocket">
-                  <span class="brandIcon rk"></span>
-                  <span>Rocket</span>
-                </button>
-              </div>
-
-              <div class="field mt">
-                <label>Mobile Number</label>
-                <input id="mbNumber" type="text" inputmode="numeric" placeholder="01XXXXXXXXX" maxlength="11"/>
-                <div class="muted small mt" id="otpHint">Enter mobile number to get OTP</div>
-              </div>
-
-              <div class="grid2">
-                <div class="field">
-                  <label>OTP</label>
-                  <input id="mbOtp" type="text" inputmode="numeric" placeholder="Auto OTP" maxlength="6"/>
-                </div>
-                <div class="field">
-                  <label>PIN</label>
-                  <input id="mbPin" type="password" placeholder="••••" maxlength="6"/>
-                </div>
-              </div>
-
-              <div class="row mt">
-                <button id="btnPayMB" class="btn primary full">Pay with Mobile Banking</button>
-              </div>
-              <div class="hint mt"></div>
-            </div>
-          </div>
-
-          <div class="payRight">
-            <div class="paySummary">
-              <div class="payBadge">Secure Checkout</div>
-              <div class="payAmount" id="payAmountText">BDT 0</div>
-              <div class="muted small" id="payTermText">—</div>
-              <div class="divider"></div>
-
-              <div class="miniRow">
-                <div class="muted">Credits</div>
-                <div id="payCreditsText">0.00</div>
-              </div>
-              <div class="miniRow">
-                <div class="muted">Per Credit</div>
-                <div id="payPerCreditText">BDT 120</div>
-              </div>
-              <div class="miniRow">
-                <div class="muted">Gateway Fee</div>
-                <div id="payGatewayFee">BDT 0</div>
-              </div>
-
-              <div class="divider"></div>
-              <div class="miniRow total">
-                <div>Total Payable</div>
-                <div id="payTotalText">BDT 0</div>
-              </div>
-
-              <div class="hint mt">
-          
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="payStatus" class="payStatus hidden"></div>
-
-        <!-- SUCCESS OVERLAY -->
-        <div id="successOverlay" class="successOverlay hidden">
-          <div class="successCard">
-            <div class="checkWrap">
-              <svg class="checkSvg" viewBox="0 0 52 52">
-                <circle class="checkCircle" cx="26" cy="26" r="25" fill="none"/>
-                <path class="checkMark" fill="none" d="M14 27 l7 7 l17 -17"/>
-              </svg>
-            </div>
-            <div class="successText">Payment Successfully</div>
-            <div class="muted small" id="successMeta">—</div>
-          </div>
-          <div id="confetti" class="confetti"></div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
   <script src="app.js"></script>
 </body>
 </html>
-
-
-
-
