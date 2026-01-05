@@ -358,3 +358,8 @@ body{
     opacity:0.9;
   }
 }
+#welcomeText{
+  display: none !important;
+}
+
+
